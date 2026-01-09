@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.claudecode-usage" path="/org/gnome/shell/extensions/claudecode-usage/">
+    <key name="refresh-interval" type="i">
+      <default>300</default>
+      <summary>Refresh Interval</summary>
+      <description>Intervalle de rafraîchissement en secondes</description>
+    </key>
+  </schema>
+</schemalist>
