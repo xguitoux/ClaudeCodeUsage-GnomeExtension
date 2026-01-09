@@ -24,13 +24,13 @@ Extension GNOME Shell qui affiche les métriques d'utilisation de Claude Code vi
 
 2. Copiez le dossier dans le répertoire des extensions GNOME:
 ```bash
-mkdir -p ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.local
-cp -r * ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.local/
+mkdir -p ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.homedev
+cp -r * ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.homedev/
 ```
 
 3. Compilez le schéma GSettings:
 ```bash
-cd ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.local
+cd ~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.homedev
 glib-compile-schemas schemas/
 ```
 
@@ -40,19 +40,19 @@ glib-compile-schemas schemas/
 
 5. Activez l'extension:
 ```bash
-gnome-extensions enable claudecode-usage@guitou.local
+gnome-extensions enable claudecode-usage@guitou.homedev
 ```
 
 ### Méthode 2: Script d'installation
 
 ```bash
 #!/bin/bash
-EXTENSION_DIR=~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.local
+EXTENSION_DIR=~/.local/share/gnome-shell/extensions/claudecode-usage@guitou.homedev
 mkdir -p "$EXTENSION_DIR"
 cp -r * "$EXTENSION_DIR/"
 cd "$EXTENSION_DIR"
 glib-compile-schemas schemas/
-gnome-extensions enable claudecode-usage@guitou.local
+gnome-extensions enable claudecode-usage@guitou.homedev
 echo "Extension installée. Redémarrez GNOME Shell."
 ```
 

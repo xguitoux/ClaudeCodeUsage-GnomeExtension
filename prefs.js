@@ -19,19 +19,6 @@ export default class ClaudeCodeUsagePreferences extends ExtensionPreferences {
     });
     page.add(group);
 
-    // // Champ pour la clé API
-    // const apiKeyRow = new Adw.EntryRow({
-    //     title: _('API Key'),
-    //     text: settings.get_string('api-key'),
-    //     show_apply_button: true,
-    // });
-
-    apiKeyRow.connect("apply", (widget) => {
-      settings.set_string("api-key", widget.get_text());
-    });
-
-    group.add(apiKeyRow);
-
     // Intervalle de rafraîchissement
     const refreshRow = new Adw.SpinRow({
       title: _("Refresh Interval (seconds)"),
@@ -61,20 +48,11 @@ export default class ClaudeCodeUsagePreferences extends ExtensionPreferences {
     const infoRow = new Adw.ActionRow({
       title: _("À propos"),
       subtitle: _(
-        "Cette extension affiche les métriques d'utilisation de Claude Code via l'API Usage Cost d'Anthropic. Vous devez avoir une clé API Admin pour utiliser cette extension.",
+        "Cette extension affiche les métriques d'utilisation de Claude Code via l'API interne d'Anthropic. Vous devez avoir Claude Code installé sur votre machine pour que celà fonctionne.",
       ),
     });
 
     infoGroup.add(infoRow);
-
-    const apiLinkRow = new Adw.ActionRow({
-      title: _("Documentation API"),
-      subtitle: _(
-        "https://platform.claude.com/docs/fr/build-with-claude/usage-cost-api",
-      ),
-    });
-
-    infoGroup.add(apiLinkRow);
 
     window.add(page);
   }

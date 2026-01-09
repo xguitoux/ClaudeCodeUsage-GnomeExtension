@@ -2,7 +2,7 @@
 
 # Script d'installation pour l'extension Claude Code Usage
 
-EXTENSION_UUID="claudecode-usage@guitou.local"
+EXTENSION_UUID="claudecode-usage@guitou.homedev"
 EXTENSION_DIR="$HOME/.local/share/gnome-shell/extensions/$EXTENSION_UUID"
 
 echo "Installation de l'extension Claude Code Usage..."

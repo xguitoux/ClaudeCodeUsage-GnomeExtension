@@ -301,7 +301,7 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
     _openSettings() {
       try {
         Gio.Subprocess.new(
-          ["gnome-extensions", "prefs", "claudecode-usage@guitou.local"],
+          ["gnome-extensions", "prefs", "claudecode-usage@guitou.homedev"],
           Gio.SubprocessFlags.NONE,
         );
       } catch (e) {
