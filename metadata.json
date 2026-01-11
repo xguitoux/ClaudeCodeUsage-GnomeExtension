@@ -1,9 +1,9 @@
 {
   "name": "Claude Code Usage",
-  "description": "Affiche les métriques d'utilisation de Claude Code via l'API Usage Cost d'Anthropic",
+  "description": "Affiche les métriques d'utilisation de Claude Code via l'API interne d'Anthropic",
   "uuid": "claudecode-usage@guitou.homedev",
   "shell-version": ["46", "47", "48", "49"],
-  "version": 2,
+  "version": 3,
   "url": "https://github.com/xguitoux/ClaudeCodeUsage-GnomeExtension",
   "settings-schema": "org.gnome.shell.extensions.claudecode-usage"
 }

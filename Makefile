@@ -13,6 +13,7 @@ $(NAME).zip: extension.js prefs.js schemas/gschemas.compiled metadata.json
 	@mkdir -p dist
 	@cp extension.js prefs.js metadata.json dist/
 	@cp -r schemas dist/
+	@cp -r icons dist/
 	@(cd dist && zip ../$(NAME).zip -9r .)
 	@rm -rf dist
 

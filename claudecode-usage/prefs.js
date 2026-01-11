@@ -39,6 +39,55 @@ export default class ClaudeCodeUsagePreferences extends ExtensionPreferences {
 
     group.add(refreshRow);
 
+    // Option d'affichage du logo
+    const logoRow = new Adw.SwitchRow({
+      title: _("Afficher le logo Claude"),
+      subtitle: _("Afficher l'icône Claude au lieu du texte 'Claude:'"),
+    });
+
+    logoRow.set_active(settings.get_boolean("show-logo"));
+    logoRow.connect("notify::active", (widget) => {
+      settings.set_boolean("show-logo", widget.get_active());
+    });
+
+    group.add(logoRow);
+
+    // Position dans le panneau
+    const positionRow = new Adw.ComboRow({
+      title: _("Position dans le panneau"),
+      subtitle: _("Choisissez où afficher l'extension"),
+      model: new Gtk.StringList({
+        strings: [_("Gauche"), _("Centre"), _("Droite")],
+      }),
+    });
+
+    positionRow.set_selected(settings.get_int("panel-position"));
+    positionRow.connect("notify::selected", (widget) => {
+      settings.set_int("panel-position", widget.get_selected());
+    });
+
+    group.add(positionRow);
+
+    // Index dans la zone
+    const indexRow = new Adw.SpinRow({
+      title: _("Position dans la zone"),
+      subtitle: _("Position relative dans la zone (-1 pour la fin)"),
+      adjustment: new Gtk.Adjustment({
+        lower: -1,
+        upper: 20,
+        step_increment: 1,
+        value: settings.get_int("panel-box-index"),
+      }),
+    });
+
+    indexRow.connect("output", () => {
+      const value = indexRow.get_value();
+      settings.set_int("panel-box-index", value);
+      return true;
+    });
+
+    group.add(indexRow);
+
     // Informations
     const infoGroup = new Adw.PreferencesGroup({
       title: _("Information"),

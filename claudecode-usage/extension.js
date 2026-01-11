@@ -15,21 +15,51 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 const ClaudeCodeUsageIndicator = GObject.registerClass(
   class ClaudeCodeUsageIndicator extends PanelMenu.Button {
-    _init(settings) {
+    _init(settings, extensionPath) {
       super._init(0.0, _("Claude Code Usage"));
 
       this._settings = settings;
+      this._extensionPath = extensionPath;
       this._httpSession = new Soup.Session();
 
-      // Créer l'indicateur dans le panneau
-      this._label = new St.Label({
-        text: "Claude: --",
+      // Créer un conteneur pour l'icône et/ou le label
+      this._box = new St.BoxLayout({
+        style_class: "panel-status-menu-box",
+      });
+      this.add_child(this._box);
+
+      // Créer l'icône
+      this._icon = new St.Icon({
+        style_class: "system-status-icon",
         y_align: Clutter.ActorAlign.CENTER,
       });
-      this.add_child(this._label);
+
+      // Créer le label "Claude:" (en blanc)
+      this._claudeLabel = new St.Label({
+        text: "Claude: ",
+        y_align: Clutter.ActorAlign.CENTER,
+        style: "color: #FFFFFF;",
+      });
+
+      // Créer le label pour le pourcentage (avec couleur variable)
+      this._percentLabel = new St.Label({
+        text: "--",
+        y_align: Clutter.ActorAlign.CENTER,
+      });
+
+      // Mettre à jour l'affichage selon les paramètres
+      this._updateDisplay();
+
+      // Écouter les changements de paramètres
+      this._settingsChangedId = this._settings.connect("changed", () => {
+        this._updateDisplay();
+      });
 
       // Créer le menu déroulant
       this._createMenu();
+
+      // Charger l'icône depuis le fichier
+      this._loadIcon();
 
       // Charger les données initiales
       this._updateUsage();
@@ -43,6 +73,43 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
           return GLib.SOURCE_CONTINUE;
         },
       );
+    }
+
+    _loadIcon() {
+      try {
+        const iconPath = GLib.build_filenamev([
+          this._extensionPath,
+          "icons",
+          "claude-logo.svg",
+        ]);
+
+        const file = Gio.File.new_for_path(iconPath);
+        const icon = new Gio.FileIcon({ file: file });
+        this._icon.set_gicon(icon);
+      } catch (e) {
+        console.error("Error loading icon: " + e);
+        // Utiliser une icône de fallback
+        this._icon.set_icon_name("claude-logo");
+      }
+    }
+
+    _updateDisplay() {
+      const showLogo = this._settings.get_boolean("show-logo");
+
+      // Retirer tous les enfants
+      this._box.remove_all_children();
+
+      // Ajouter l'icône + pourcentage ou "Claude:" + pourcentage selon les paramètres
+      if (showLogo) {
+        this._box.add_child(this._icon);
+        this._box.add_child(this._percentLabel);
+      } else {
+        this._box.add_child(this._claudeLabel);
+        this._box.add_child(this._percentLabel);
+      }
+
+      // Stocker l'état pour les mises à jour futures
+      this._showLogo = showLogo;
     }
 
     _createMenu() {
@@ -107,12 +174,12 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
         }
       } catch (e) {
         console.error("Error reading credentials: " + e);
-        this._label.set_text("Claude: No Token");
+        this._percentLabel.set_text("No Token");
         return;
       }
 
       if (!token) {
-        this._label.set_text("Claude: No Token");
+        this._percentLabel.set_text("No Token");
         return;
       }
 
@@ -147,11 +214,11 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
               console.error(
                 "API Error: " + message.status_code + " - " + response,
               );
-              this._label.set_text("Claude: Error");
+              this._percentLabel.set_text("Error");
             }
           } catch (e) {
             console.error("Error processing API response: " + e);
-            this._label.set_text("Claude: Error");
+            this._percentLabel.set_text("Error");
           }
         },
       );
@@ -159,7 +226,7 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
 
     _processOAuthUsageData(data) {
       if (!data) {
-        this._label.set_text("Claude: No Data");
+        this._percentLabel.set_text("No Data");
         return;
       }
 
@@ -194,7 +261,7 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
         this._stopCountdown();
 
         // Mettre à jour l'affichage principal avec l'utilisation sur 5 heures
-        this._label.set_text("Claude: " + fiveHourUtil.toFixed(0) + "%");
+        this._percentLabel.set_text(fiveHourUtil.toFixed(0) + "%");
       }
 
       // Appliquer une coloration selon le niveau d'utilisation
@@ -209,7 +276,9 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
       } else if (fiveHourUtil >= 25) {
         color = "#44FF44"; // Vert
       }
-      this._label.set_style("color: " + color + ";");
+
+      // Appliquer la couleur uniquement au pourcentage
+      this._percentLabel.set_style("color: " + color + ";");
 
       // Mettre à jour les éléments du menu
       this._inputTokensItem.label.set_text(
@@ -278,7 +347,7 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
       const diff = this._resetDate - now;
 
       if (diff <= 0) {
-        this._label.set_text("Claude: Resetting...");
+        this._percentLabel.set_text("Resetting...");
         this._stopCountdown();
         // Re-vérifier l'usage après le reset
         GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
@@ -295,7 +364,7 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
 
       // Formater l'affichage
       const timeStr = `${hours}h ${minutes}m ${seconds}s`;
-      this._label.set_text("Reset: " + timeStr);
+      this._percentLabel.set_text(timeStr);
     }
 
     _openSettings() {
@@ -317,6 +386,11 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
 
       this._stopCountdown();
 
+      if (this._settingsChangedId) {
+        this._settings.disconnect(this._settingsChangedId);
+        this._settingsChangedId = null;
+      }
+
       super.destroy();
     }
   },
@@ -325,11 +399,83 @@ const ClaudeCodeUsageIndicator = GObject.registerClass(
 export default class ClaudeCodeUsageExtension extends Extension {
   enable() {
     this._settings = this.getSettings();
-    this._indicator = new ClaudeCodeUsageIndicator(this._settings);
-    Main.panel.addToStatusArea(this.uuid, this._indicator);
+    this._indicator = new ClaudeCodeUsageIndicator(this._settings, this.path);
+
+    // Obtenir la position depuis les paramètres
+    const position = this._settings.get_int("panel-position");
+    const boxIndex = this._settings.get_int("panel-box-index");
+
+    // Déterminer dans quelle boîte ajouter l'indicateur
+    let box;
+    switch (position) {
+      case 0: // Gauche
+        box = Main.panel._leftBox;
+        break;
+      case 1: // Centre
+        box = Main.panel._centerBox;
+        break;
+      case 2: // Droite
+        box = Main.panel._rightBox;
+        break;
+      default:
+        box = Main.panel._rightBox;
+    }
+
+    // Ajouter l'indicateur
+    Main.panel.addToStatusArea(this.uuid, this._indicator, boxIndex, box);
+
+    // Écouter les changements de position
+    this._positionChangedId = this._settings.connect(
+      "changed::panel-position",
+      () => this._repositionIndicator(),
+    );
+    this._indexChangedId = this._settings.connect(
+      "changed::panel-box-index",
+      () => this._repositionIndicator(),
+    );
+  }
+
+  _repositionIndicator() {
+    // Retirer l'indicateur actuel
+    if (this._indicator) {
+      this._indicator.destroy();
+    }
+
+    // Recréer l'indicateur à la nouvelle position
+    this._indicator = new ClaudeCodeUsageIndicator(this._settings, this.path);
+
+    const position = this._settings.get_int("panel-position");
+    const boxIndex = this._settings.get_int("panel-box-index");
+
+    let box;
+    switch (position) {
+      case 0:
+        box = Main.panel._leftBox;
+        break;
+      case 1:
+        box = Main.panel._centerBox;
+        break;
+      case 2:
+        box = Main.panel._rightBox;
+        break;
+      default:
+        box = Main.panel._rightBox;
+    }
+
+    Main.panel.addToStatusArea(this.uuid, this._indicator, boxIndex, box);
   }
 
   disable() {
+    if (this._positionChangedId) {
+      this._settings.disconnect(this._positionChangedId);
+      this._positionChangedId = null;
+    }
+
+    if (this._indexChangedId) {
+      this._settings.disconnect(this._indexChangedId);
+      this._indexChangedId = null;
+    }
+
     if (this._indicator) {
       this._indicator.destroy();
       this._indicator = null;
